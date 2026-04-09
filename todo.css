@@ -285,6 +285,17 @@ body {
   background-color: var(--color-background);
 }
 
+/* Drag and Drop feedback */
+.taak-item--dragging {
+  opacity: 0.5;
+  background-color: var(--color-background);
+  border: 1px dashed var(--color-primary);
+}
+
+.taak-item--drag-over {
+  border-top: 2px solid var(--color-primary);
+}
+
 /* Afgeronde taak */
 .taak-item--afgerond {
   background-color: var(--color-afgerond);

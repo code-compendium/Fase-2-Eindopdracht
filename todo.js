@@ -70,6 +70,7 @@ function renderTakenLijst(zichtbareTaken) {
       <li
         class="taak-item${taak.afgerond ? " taak-item--afgerond" : ""}"
         data-id="${taak.id}"
+        draggable="true"
       >
         <input
           type="checkbox"
@@ -191,6 +192,21 @@ function wisAfgerond() {
   render();
 }
 
+function reorderTaken(draggingId, targetId) {
+  const draggingIndex = taken.findIndex(t => t.id === draggingId);
+  const targetIndex = taken.findIndex(t => t.id === targetId);
+
+  if (draggingIndex === -1 || targetIndex === -1) return;
+
+  const nieuweTaken = [...taken];
+  const [removed] = nieuweTaken.splice(draggingIndex, 1);
+  nieuweTaken.splice(targetIndex, 0, removed);
+
+  taken = nieuweTaken;
+  slaaTakenOp();
+  render();
+}
+
 function setFilter(filter) {
   huidigFilter = filter;
   render();
@@ -238,6 +254,57 @@ takenLijst.addEventListener("click", (event) => {
   if (checkbox) {
     const taakItem = checkbox.closest("[data-id]");
     toggleTaak(Number(taakItem.dataset.id));
+  }
+});
+
+// Drag and Drop Events
+takenLijst.addEventListener("dragstart", (e) => {
+  const taakItem = e.target.closest(".taak-item");
+  if (!taakItem) return;
+
+  e.dataTransfer.setData("text/plain", taakItem.dataset.id);
+  e.dataTransfer.effectAllowed = "move";
+  taakItem.classList.add("taak-item--dragging");
+});
+
+takenLijst.addEventListener("dragend", (e) => {
+  const taakItem = e.target.closest(".taak-item");
+  if (taakItem) {
+    taakItem.classList.remove("taak-item--dragging");
+  }
+  // Verwijder alle drag-over classes
+  document.querySelectorAll(".taak-item--drag-over").forEach(el => {
+    el.classList.remove("taak-item--drag-over");
+  });
+});
+
+takenLijst.addEventListener("dragover", (e) => {
+  e.preventDefault(); // Noodzakelijk om drop toe te staan
+  e.dataTransfer.dropEffect = "move";
+
+  const taakItem = e.target.closest(".taak-item");
+  if (taakItem && !taakItem.classList.contains("taak-item--dragging")) {
+    taakItem.classList.add("taak-item--drag-over");
+  }
+});
+
+takenLijst.addEventListener("dragleave", (e) => {
+  const taakItem = e.target.closest(".taak-item");
+  if (taakItem) {
+    taakItem.classList.remove("taak-item--drag-over");
+  }
+});
+
+takenLijst.addEventListener("drop", (e) => {
+  e.preventDefault();
+  const draggingId = Number(e.dataTransfer.getData("text/plain"));
+  const targetItem = e.target.closest(".taak-item");
+  
+  if (!targetItem) return;
+  const targetId = Number(targetItem.dataset.id);
+
+  if (draggingId !== targetId) {
+    reorderTaken(draggingId, targetId);
   }
 });
 
